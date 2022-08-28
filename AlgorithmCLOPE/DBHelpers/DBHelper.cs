@@ -34,16 +34,14 @@ namespace AlgorithmCLOPE.DBHelpers
             return adapter;
         }
 
-        static DbDataAdapter CreateDataAdapterWithSelectCommand(DbConnection connection, string tablename)
+        public static DbDataAdapter CreateDataAdapterWithSelectCommand(DbConnection connection, string tablename)
         {
             DbProviderFactory factory = DbProviderFactories.GetFactory(connection);
 
             string queryString = $"SELECT * FROM {tablename}";
 
             // Create the DbCommand.
-            DbCommand command = factory.CreateCommand();
-            command.CommandText = queryString;
-            command.Connection = connection;
+            DbCommand command = CreateCommand(connection, queryString);
 
             // Create the DbDataAdapter.
             DbDataAdapter adapter = factory.CreateDataAdapter();
@@ -51,7 +49,20 @@ namespace AlgorithmCLOPE.DBHelpers
 
             return adapter;
         }
-    
+
+        public static DbCommand CreateCommand(DbConnection connection, string query)
+        {
+            DbProviderFactory factory = DbProviderFactories.GetFactory(connection);
+
+            // Create the DbCommand.
+            DbCommand command = factory.CreateCommand();
+            command.CommandText = query;
+            command.Connection = connection;
+
+            return command;
+
+        }
+
         public static DbCommand GetInsertCommand(out DbDataAdapter adapter, 
                                                  DbConnection connection, 
                                                  string tablename)

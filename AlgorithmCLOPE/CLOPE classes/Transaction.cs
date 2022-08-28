@@ -1,6 +1,7 @@
 ﻿using AlgorithmCLOPE.CLOPE_classes;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace AlgorithmCLOPE
@@ -44,5 +45,16 @@ namespace AlgorithmCLOPE
             return result;
         }
 
+        public static Transaction Parse(IDataRecord record)
+        {
+            Transaction newTransaction = new Transaction();
+
+            for (int i=0; i < record.FieldCount; i++)
+            {
+                newTransaction.Items.Add(new TransactionItem(record[i]));
+            }
+
+            return newTransaction;
+        }
     }
 }

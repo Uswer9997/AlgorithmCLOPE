@@ -1,10 +1,9 @@
-﻿using System;
+﻿using AlgorithmCLOPE.CLOPE_classes;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Windows.Forms;
 using dbHlp = AlgorithmCLOPE.DBHelpers.DBHelper;
@@ -18,8 +17,11 @@ namespace AlgorithmCLOPE
             InitializeComponent();
         }
 
+        //Fields
         private DbConnection CLOPEDataBaseConnection;
-        private string CLOPEtableName = "Mushrooms";
+        private string CLOPEtableName = "Mushrooms"; //имя таблицы транзакций в базе
+        private ClusterRepository clusterRepo; //репозиторий кластеров
+        private bool IsRepulsionValid; //true, если пользователь ввёл корректный коэфф. отталкивания
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -27,9 +29,13 @@ namespace AlgorithmCLOPE
             string parameterName = "AlgorithmCLOPE.Properties.Settings.CLOPEDBConnectionString";
             string providerName = ConfigurationManager.ConnectionStrings[parameterName].ProviderName;
             string connectionStr = ConfigurationManager.ConnectionStrings[parameterName].ConnectionString;
-            CLOPEDataBaseConnection = dbHlp.CreateDbConnection(providerName, connectionStr); // new SqlConnection(connectionStr);
+            CLOPEDataBaseConnection = dbHlp.CreateDbConnection(providerName, connectionStr);
+            //Создадим репозиторий кластеров
+            clusterRepo = ClusterRepository.GetRepository();
+            //Инициализируем интерфейс программы
+            RepulsionTextBox.Text = CLOPEAnalizing.repulsion.ToString();
         }
-               
+
 
         /// <summary>
         /// Загрузим данные из файла в базу данных
@@ -67,11 +73,11 @@ namespace AlgorithmCLOPE
                     while (line != null)
                     {
                         // Получим массив данных в строковом представлении
-                        string[] fragments = line.Split(new char[] {','});
+                        string[] fragments = line.Split(new char[] { ',' });
                         if (fragments != null && fragments.Count() > 0)
                         {
                             // Наполним insert-команду данными для записи
-                            for (int i=0; i < fragments.Length & i < insertCmd.Parameters.Count-1; i++)
+                            for (int i = 0; i < fragments.Length & i < insertCmd.Parameters.Count - 1; i++)
                             {
                                 insertCmd.Parameters[i].Value = fragments[i];
                             }
@@ -86,9 +92,141 @@ namespace AlgorithmCLOPE
             connection.Close();
         }
 
-        private void btnInitClusters_Click(object sender, EventArgs e)
+        private void btnClusterize_Click(object sender, EventArgs e)
         {
+            //Проверим, что данные для обработки существуют
+            if (!DataPresents(CLOPEDataBaseConnection, CLOPEtableName))
+            {
+                MessageBox.Show("Не заполнена таблица для анализа.");
+                return;
+            }
+            //Проверим, что коэффициент отталкивания введён верно
+            if (!IsRepulsionValid)
+            {
+                MessageBox.Show("С такими данными мы ничего не посчитаем.");
+                return;
+            }
+            //Погнали кластеризацию
+            //Сначала инициализируем кластеры
+            InitClusters();
 
+            //*********** вспомогательный вывод ***************
+            ClustersDataGridView.DataSource = clusterRepo.GetAll();
+
+
+            //Сама кластеризация
+            Clusterize();
+        }
+
+        private bool DataPresents(DbConnection connection, string tableName)
+        {
+            DbDataAdapter da = dbHlp.CreateDataAdapterWithSelectCommand(connection, tableName);
+            da.SelectCommand.CommandText = $"SELECT COUNT(*) FROM {tableName}";
+            int countRecs;
+            try
+            {
+                connection.Open();
+                if ((int.TryParse(da.SelectCommand.ExecuteScalar().ToString(), out countRecs)) && (countRecs > 0))
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+
+            return false;
+        }
+
+        private void RepulsionTextBox_Validated(object sender, EventArgs e)
+        {
+            double repulsion;
+            if (double.TryParse(RepulsionTextBox.Text, out repulsion))
+            {
+                errorProvider1.Clear();
+                CLOPEAnalizing.repulsion = repulsion;
+                IsRepulsionValid = true;
+            }
+            else
+            {
+                IsRepulsionValid = false;
+                errorProvider1.SetError(RepulsionTextBox, "Недопустимое значение");
+            }
+        }
+
+        /// <summary>
+        /// Инициализирует кластеры
+        /// </summary>
+        private void InitClusters()
+        {
+            clusterRepo.Clear(); //Удаляем все ранее созданные кластеры
+
+            //Тут всё очевидно, создаём ридер для чтения таблицы
+            string selectQuery = $"SELECT * FROM {CLOPEtableName}";
+            CLOPEDataBaseConnection.Open();
+            DbDataReader reader = dbHlp.CreateCommand(CLOPEDataBaseConnection, selectQuery).ExecuteReader();
+            Transaction currentTransaction; //текущая транзакция
+            int transactionNumber = 0; //число обработанных транзакций для вывода на форму
+            //Последовательно читаем таблицу транзакций
+            while (reader.Read())
+            {
+                clusterRepo.Add(new Cluster()); //добавим пустой кластер
+                //создадим объект транзакции из считанных данных
+                currentTransaction = Transaction.Parse((IDataRecord)reader);
+                double maxDelta = 0; //максимальный прирост при добавлении для текущей транзакции
+                double currentDelta; //прирост для текущей транзакции и текущего кластера
+                int bestClusterIndex = 0; //индекс кластера с максимумом прироста
+
+                //найдём кластер с максимальным приростом
+                for (int i = 0; i < clusterRepo.Count; i++)
+                {
+                    currentDelta = CLOPEAnalizing.DeltaAdd(clusterRepo.GetCluster(i), currentTransaction, CLOPEAnalizing.repulsion);
+                    if (currentDelta > maxDelta)
+                    {
+                        maxDelta = currentDelta;
+                        bestClusterIndex = i;
+                    }
+                }
+                //кластер с максимальным приростом
+                Cluster bestCluster = clusterRepo.GetCluster(bestClusterIndex);
+
+                //добавим в кластер информацию по всем объектам транзакции
+                AddAllTransitionItemToCluster(bestCluster, currentTransaction);
+
+                transactionNumber++;
+                lblTransactions.Text = transactionNumber.ToString();
+                Application.DoEvents();
+            }
+            reader.Close();
+            CLOPEDataBaseConnection.Close();
+        }
+
+        private void AddAllTransitionItemToCluster(Cluster cluster, Transaction transaction)
+        {
+            TransactionItemStatistic newStatistic;
+            foreach (TransactionItem item in transaction.Items)
+            {
+                newStatistic = new TransactionItemStatistic(item);
+                cluster.Statistics.Add(newStatistic);
+            }
+        }
+
+        private void Clusterize()
+        {
+            //string selectQuery = $"SELECT * FROM {CLOPEtableName}";
+            //DbDataReader reader = dbHlp.CreateCommand(CLOPEDataBaseConnection,selectQuery).ExecuteReader();
+            //Transaction currentTransaction;
+            //while (reader.Read())
+            //{
+            //    currentTransaction = Transaction.Parse((IDataRecord)reader);
+
+            //}
+            //reader.Close();
         }
     }
 }

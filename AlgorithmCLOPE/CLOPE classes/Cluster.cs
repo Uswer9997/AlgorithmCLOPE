@@ -9,6 +9,9 @@ namespace AlgorithmCLOPE
         public double Width { get; private set; }
         public double Height { get; private set; }
         public TransactionItemStatistics Statistics { get; private set; }
+        public int TransactionCount { get => GetTransactionCount(); }
+        public int Index { get; set; }
+        public bool IsEmpty { get => (GetTransactionCount() > 0) ? false : true; }
 
         //Constructor
         public Cluster()
@@ -25,6 +28,11 @@ namespace AlgorithmCLOPE
         private double GetWidth()
         {
             return Statistics.Count;
+        }
+
+        private int GetTransactionCount()
+        {
+            return Statistics.Sum(s => s.Count);
         }
 
         public void UpdateCluster()

@@ -47,10 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CLOPE classes\CLOPEAnalizing.cs" />
     <Compile Include="CLOPE classes\Cluster.cs" />
     <Compile Include="CLOPE classes\TransactionItem.cs" />
     <Compile Include="CLOPE classes\TransactionItemStatistics.cs" />
     <Compile Include="CLOPE classes\TransactionItemStatistic.cs" />
+    <Compile Include="ClusterRepository.cs" />
     <Compile Include="DBHelpers\DBHelper.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

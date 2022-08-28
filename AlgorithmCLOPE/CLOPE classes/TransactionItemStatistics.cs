@@ -8,13 +8,13 @@ namespace AlgorithmCLOPE.CLOPE_classes
     {
         //Fields
         private List<TransactionItemStatistic> statisticList;
-        private Cluster myClaster;
+        private Cluster myCluster;
 
         //Constructor
         public TransactionItemStatistics(Cluster owner)
         {
             statisticList = new List<TransactionItemStatistic>();
-            myClaster = owner;
+            myCluster = owner;
         }
 
         //Interface realisation
@@ -100,7 +100,25 @@ namespace AlgorithmCLOPE.CLOPE_classes
         //Metods
         private void onClasterUpdate()
         {
-            myClaster.UpdateCluster();
+            myCluster.UpdateCluster();
+        }
+
+        /// <summary>
+        /// Ищет все объекты статистики, у которых базис равен параметру searchItem
+        /// </summary>
+        /// <param name="searchItem"></param>
+        /// <returns>Возвращает список объектов статистики</returns>
+        public List<TransactionItemStatistic> Find(TransactionItem searchItem)
+        {
+            List<TransactionItemStatistic> resultList = new List<TransactionItemStatistic>();
+            foreach (TransactionItemStatistic currentItem in this)
+            {
+                if (currentItem.Basis.Equals(searchItem))
+                {
+                    resultList.Add(currentItem);
+                }
+            }
+            return resultList;
         }
     }
 }
