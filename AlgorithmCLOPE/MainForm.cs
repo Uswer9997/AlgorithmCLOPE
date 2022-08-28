@@ -70,6 +70,7 @@ namespace AlgorithmCLOPE
                         string[] fragments = line.Split(new char[] {','});
                         if (fragments != null && fragments.Count() > 0)
                         {
+                            // Наполним insert-команду данными для записи
                             for (int i=0; i < fragments.Length & i < insertCmd.Parameters.Count-1; i++)
                             {
                                 insertCmd.Parameters[i].Value = fragments[i];
