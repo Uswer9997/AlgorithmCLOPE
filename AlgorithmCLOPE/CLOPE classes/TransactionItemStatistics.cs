@@ -17,6 +17,8 @@ namespace AlgorithmCLOPE.CLOPE_classes
             myCluster = owner;
         }
 
+        #region IList Interface
+
         //Interface realisation
         public TransactionItemStatistic this[int index]
         {
@@ -37,8 +39,8 @@ namespace AlgorithmCLOPE.CLOPE_classes
             //Если добавляется элемент подобный уже имеющемуся в коллекции
             if (statisticList.Contains(item))
             {
-                int index = statisticList.IndexOf(item);
-                statisticList[index].Increase(item); //увеличит число вхождений на величину в item
+                int index = statisticList.IndexOf(item); //найдём индекс подобного элемента
+                statisticList[index].Increase(item); //увеличим число вхождений на величину в item
             }
             else
             {
@@ -97,28 +99,33 @@ namespace AlgorithmCLOPE.CLOPE_classes
             return statisticList.GetEnumerator();
         }
 
+        #endregion
+
         //Metods
+        /// <summary>
+        /// Обновляет показатели кластера
+        /// </summary>
         private void onClasterUpdate()
         {
             myCluster.UpdateCluster();
         }
 
         /// <summary>
-        /// Ищет все объекты статистики, у которых базис равен параметру searchItem
+        /// Выполняет поиск объекта статистики, у которого базис равен параметру searchItem
+        /// и возвращает первое найденное вхождение в пределах всего списка.
         /// </summary>
         /// <param name="searchItem"></param>
-        /// <returns>Возвращает список объектов статистики</returns>
-        public List<TransactionItemStatistic> Find(TransactionItem searchItem)
+        /// <returns>Возвращает найденный объект статистики. Если объект не найден возвращает null</returns>
+        public TransactionItemStatistic Find(TransactionItem searchItem)
         {
-            List<TransactionItemStatistic> resultList = new List<TransactionItemStatistic>();
             foreach (TransactionItemStatistic currentItem in this)
             {
                 if (currentItem.Basis.Equals(searchItem))
                 {
-                    resultList.Add(currentItem);
+                    return currentItem;
                 }
             }
-            return resultList;
+            return null;
         }
     }
 }

@@ -166,9 +166,10 @@ namespace AlgorithmCLOPE
         {
             clusterRepo.Clear(); //Удаляем все ранее созданные кластеры
 
-            //Тут всё очевидно, создаём ридер для чтения таблицы
+            //Тут всё очевидно, создаём строку на выборку данных, открываем соединение
             string selectQuery = $"SELECT * FROM {CLOPEtableName}";
             CLOPEDataBaseConnection.Open();
+            //Создаём ридер для чтения таблицы 
             DbDataReader reader = dbHlp.CreateCommand(CLOPEDataBaseConnection, selectQuery).ExecuteReader();
             Transaction currentTransaction; //текущая транзакция
             int transactionNumber = 0; //число обработанных транзакций для вывода на форму
@@ -185,7 +186,7 @@ namespace AlgorithmCLOPE
                 //найдём кластер с максимальным приростом
                 for (int i = 0; i < clusterRepo.Count; i++)
                 {
-                    currentDelta = CLOPEAnalizing.DeltaAdd(clusterRepo.GetCluster(i), currentTransaction, CLOPEAnalizing.repulsion);
+                    currentDelta = CLOPEAnalizing.DeltaAdd(clusterRepo.GetCluster(i), currentTransaction);
                     if (currentDelta > maxDelta)
                     {
                         maxDelta = currentDelta;
@@ -196,8 +197,10 @@ namespace AlgorithmCLOPE
                 Cluster bestCluster = clusterRepo.GetCluster(bestClusterIndex);
 
                 //добавим в кластер информацию по всем объектам транзакции
-                AddAllTransitionItemToCluster(bestCluster, currentTransaction);
+                bestCluster.AddTransaction(currentTransaction);
+                //AddAllTransitionItemToCluster(bestCluster, currentTransaction);
 
+                //***** визуализация процесса *******
                 transactionNumber++;
                 lblTransactions.Text = transactionNumber.ToString();
                 Application.DoEvents();
@@ -206,15 +209,15 @@ namespace AlgorithmCLOPE
             CLOPEDataBaseConnection.Close();
         }
 
-        private void AddAllTransitionItemToCluster(Cluster cluster, Transaction transaction)
-        {
-            TransactionItemStatistic newStatistic;
-            foreach (TransactionItem item in transaction.Items)
-            {
-                newStatistic = new TransactionItemStatistic(item);
-                cluster.Statistics.Add(newStatistic);
-            }
-        }
+        //private void AddAllTransitionItemToCluster(Cluster cluster, Transaction transaction)
+        //{
+        //    TransactionItemStatistic newStatistic;
+        //    foreach (TransactionItem item in transaction.Items)
+        //    {
+        //        newStatistic = new TransactionItemStatistic(item);
+        //        cluster.Statistics.Add(newStatistic);
+        //    }
+        //}
 
         private void Clusterize()
         {

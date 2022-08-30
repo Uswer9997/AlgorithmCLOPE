@@ -9,17 +9,25 @@ namespace AlgorithmCLOPE.CLOPE_classes
         public static double repulsion = 1;
 
         //Properties
-        public static List<Cluster> Clusters { get; set; }
+        //public static List<Cluster> Clusters { get; set; }
 
         //Metods
+        public static double DeltaAdd(Cluster cluster, Transaction transaction)
+        {
+            return DeltaAdd(cluster, transaction, CLOPEAnalizing.repulsion);
+        }
+
+        
         public static double DeltaAdd(Cluster cluster, Transaction transaction, double r)
         {
             double Snew = cluster.Height * cluster.Width + transaction.Items.Count;
             double Wnew = cluster.Width;
+            //объект статистики для текущего элемента транзакции
+            TransactionItemStatistic statisticItemForCurrentTransitionItem;
             for (int i=0; i < transaction.Items.Count; i++)
             {
-                List<TransactionItemStatistic> allStatisticItemForCurrentTransitionItem = cluster.Statistics.Find(transaction.Items[i]);
-                if (allStatisticItemForCurrentTransitionItem.Count == 0 )
+                statisticItemForCurrentTransitionItem = cluster.Statistics.Find(transaction.Items[i]);
+                if (statisticItemForCurrentTransitionItem == null )
                 {
                     Wnew++;
                 }
