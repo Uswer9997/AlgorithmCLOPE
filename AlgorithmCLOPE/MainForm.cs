@@ -5,6 +5,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using dbHlp = AlgorithmCLOPE.DBHelpers.DBHelper;
 
@@ -167,12 +168,38 @@ namespace AlgorithmCLOPE
             clusterRepo.Clear(); //Удаляем все ранее созданные кластеры
 
             //Тут всё очевидно, создаём строку на выборку данных, открываем соединение
-            string selectQuery = $"SELECT * FROM {CLOPEtableName}";
+            StringBuilder sb = new StringBuilder("Select ");
+            sb.Append("[classes], ");
+            sb.Append("[cap_shape], ");
+            sb.Append("[cap_surface], ");
+            sb.Append("[cap_color], ");
+            sb.Append("[bruises], ");
+            sb.Append("[odor], ");
+            sb.Append("[gill_attachment], ");
+            sb.Append("[gill_spacing], ");
+            sb.Append("[gill_size], ");
+            sb.Append("[gill_color], ");
+            sb.Append("[stalk_shape], ");
+            sb.Append("[stalk_root], ");
+            sb.Append("[stalk_surface_above_ring], ");
+            sb.Append("[stalk_surface_below_ring], ");
+            sb.Append("[stalk_color_above_ring], ");
+            sb.Append("[stalk_color_below_ring], ");
+            sb.Append("[veil_type], ");
+            sb.Append("[veil_color], ");
+            sb.Append("[ring_number], ");
+            sb.Append("[ring_type], ");
+            sb.Append("[spore_print_color], ");
+            sb.Append("[population], ");
+            sb.Append("[habitat] ");
+            sb.Append($"FROM {CLOPEtableName}");
+
+            string selectQuery = sb.ToString();
             CLOPEDataBaseConnection.Open();
             //Создаём ридер для чтения таблицы 
             DbDataReader reader = dbHlp.CreateCommand(CLOPEDataBaseConnection, selectQuery).ExecuteReader();
             Transaction currentTransaction; //текущая транзакция
-            Cluster bestCluster; //кластер с максимальным приростом
+            Cluster bestCluster; //кластер с максимальным приростом для текущей транзакции
             Cluster newCluster; //новый кластер
             double maxDelta; //максимальный прирост при добавлении для текущей транзакции
             double currentDelta; //прирост для текущей транзакции и текущего кластера
@@ -190,7 +217,7 @@ namespace AlgorithmCLOPE
 
                 bestClusterIndex = -1; //индекс кластера с максимумом прироста
 
-                //найдём кластер с максимальным приростом
+                //найдём кластер с максимальным приростом включая пустой кластер
                 for (int i = 0; i < clusterRepo.Count; i++)
                 {
                     currentDelta = CLOPEAnalizing.DeltaAdd(clusterRepo.GetCluster(i), currentTransaction);

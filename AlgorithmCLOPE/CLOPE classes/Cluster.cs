@@ -34,7 +34,7 @@ namespace AlgorithmCLOPE
 
         private int GetSquare()
         {
-            return (Statistics.Sum(s => s.Count) * Statistics.Count);
+            return Statistics.Sum(s => s.Count);
         }
 
         public void UpdateCluster()
