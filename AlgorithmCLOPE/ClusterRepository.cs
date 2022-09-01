@@ -28,7 +28,7 @@ namespace AlgorithmCLOPE
                 return repository;
             }
         }
-                       
+
         //Constructor
         private ClusterRepository()
         {
@@ -51,7 +51,7 @@ namespace AlgorithmCLOPE
         {
             uniqueIndex++;
             cluster.Index = uniqueIndex;
-clusterList.Add(cluster);
+            clusterList.Add(cluster);
             return cluster;
         }
 
@@ -62,13 +62,18 @@ clusterList.Add(cluster);
 
         public void Remove(int index)
         {
-            for (int i=clusterList.Count-1; i >=0; i--)
+            for (int i = clusterList.Count - 1; i >= 0; i--)
             {
                 if (clusterList[i].Index == index)
                 {
                     clusterList.RemoveAt(i);
                 }
             }
+        }
+
+        public void Remove(Cluster cluster)
+        {
+            clusterList.Remove(cluster);
         }
 
         public List<Cluster> GetAll()

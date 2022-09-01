@@ -20,7 +20,7 @@ namespace AlgorithmCLOPE.CLOPE_classes
         
         public static double DeltaAdd(Cluster cluster, Transaction transaction, double r)
         {
-            double Snew = cluster.Height * cluster.Width + transaction.Items.Count;
+            double Snew = cluster.Square + transaction.Items.Count; //cluster.Height * cluster.Width + transaction.Items.Count;
             double Wnew = cluster.Width;
             //объект статистики для текущего элемента транзакции
             TransactionItemStatistic statisticItemForCurrentTransitionItem;
@@ -33,7 +33,8 @@ namespace AlgorithmCLOPE.CLOPE_classes
                 }
             }
             double arg1 = Snew * (cluster.TransactionCount + 1) / (Math.Pow(Wnew, r));
-            double arg2 = cluster.Width == 0 ? 0 : (cluster.Height*cluster.Width* cluster.TransactionCount)/ Math.Pow(cluster.Width, r);
+            //double arg2 = cluster.Width == 0 ? 0 : (cluster.Height*cluster.Width* cluster.TransactionCount)/ Math.Pow(cluster.Width, r);
+            double arg2 = cluster.Width == 0 ? 0 : (cluster.Square * cluster.TransactionCount) / Math.Pow(cluster.Width, r);
 
             return arg1 - arg2;
         }

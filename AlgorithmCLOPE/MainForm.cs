@@ -172,16 +172,23 @@ namespace AlgorithmCLOPE
             //Создаём ридер для чтения таблицы 
             DbDataReader reader = dbHlp.CreateCommand(CLOPEDataBaseConnection, selectQuery).ExecuteReader();
             Transaction currentTransaction; //текущая транзакция
+            Cluster bestCluster; //кластер с максимальным приростом
+            Cluster newCluster; //новый кластер
+            double maxDelta; //максимальный прирост при добавлении для текущей транзакции
+            double currentDelta; //прирост для текущей транзакции и текущего кластера
+            int bestClusterIndex; //индекс кластера с максимумом прироста
             int transactionNumber = 0; //число обработанных транзакций для вывода на форму
             //Последовательно читаем таблицу транзакций
             while (reader.Read())
             {
-                clusterRepo.Add(new Cluster()); //добавим пустой кластер
                 //создадим объект транзакции из считанных данных
                 currentTransaction = Transaction.Parse((IDataRecord)reader);
-                double maxDelta = 0; //максимальный прирост при добавлении для текущей транзакции
-                double currentDelta; //прирост для текущей транзакции и текущего кластера
-                int bestClusterIndex = 0; //индекс кластера с максимумом прироста
+                maxDelta = 0;
+
+                newCluster = new Cluster();
+                clusterRepo.Add(newCluster);//добавим пустой кластер
+
+                bestClusterIndex = -1; //индекс кластера с максимумом прироста
 
                 //найдём кластер с максимальным приростом
                 for (int i = 0; i < clusterRepo.Count; i++)
@@ -193,12 +200,17 @@ namespace AlgorithmCLOPE
                         bestClusterIndex = i;
                     }
                 }
-                //кластер с максимальным приростом
-                Cluster bestCluster = clusterRepo.GetCluster(bestClusterIndex);
+
+                //получим кластер с максимальным приростом из репозитория
+                bestCluster = clusterRepo.GetCluster(bestClusterIndex);
+
+                if (bestCluster != newCluster)
+                {
+                    clusterRepo.Remove(newCluster);
+                }
 
                 //добавим в кластер информацию по всем объектам транзакции
                 bestCluster.AddTransaction(currentTransaction);
-                //AddAllTransitionItemToCluster(bestCluster, currentTransaction);
 
                 //***** визуализация процесса *******
                 transactionNumber++;
@@ -208,16 +220,6 @@ namespace AlgorithmCLOPE
             reader.Close();
             CLOPEDataBaseConnection.Close();
         }
-
-        //private void AddAllTransitionItemToCluster(Cluster cluster, Transaction transaction)
-        //{
-        //    TransactionItemStatistic newStatistic;
-        //    foreach (TransactionItem item in transaction.Items)
-        //    {
-        //        newStatistic = new TransactionItemStatistic(item);
-        //        cluster.Statistics.Add(newStatistic);
-        //    }
-        //}
 
         private void Clusterize()
         {

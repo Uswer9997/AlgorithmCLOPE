@@ -9,6 +9,7 @@ namespace AlgorithmCLOPE
         //Properties
         public double Width { get; private set; }
         public double Height { get; private set; }
+        public int Square { get; private set; }
         public TransactionItemStatistics Statistics { get; private set; }
         public int TransactionCount { get; private set; }
         public int Index { get; set; }
@@ -31,15 +32,16 @@ namespace AlgorithmCLOPE
             return Statistics.Count;
         }
 
-        //private int GetTransactionCount()
-        //{
-        //    return Statistics.Sum(s => s.Count);
-        //}
+        private int GetSquare()
+        {
+            return (Statistics.Sum(s => s.Count) * Statistics.Count);
+        }
 
         public void UpdateCluster()
         {
             this.Height = this.GetHeight();
             this.Width = this.GetWidth();
+            this.Square = this.GetSquare();
         }
 
         /// <summary>
